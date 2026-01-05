@@ -78,7 +78,7 @@ function toDoList() {
  input and performs different operations based on the selected action from the menu. The loop will
  continue to run until the user chooses to quit by selecting option 6 from the menu. */
   while (action != "Quit") {
-    let array=userDB[currentUser].toDo;
+    let array=userDB[currentUser].toDo; // userDB[user]['todo'] 
     let markAsDone=userDB[currentUser].Done;
     // Checking for user input and performing respective operations
     if (action === "view ToDo List") {
@@ -87,8 +87,7 @@ function toDoList() {
     } 
     
     // Adding new Task to ToDo List array if user selects 2
-    else if (action === "Add ToDo List") {
-      
+    else if (action === "Add ToDo List") {  
       let give = prompt("Please Input your Task: ");
       array.push(give);
       printList(array);

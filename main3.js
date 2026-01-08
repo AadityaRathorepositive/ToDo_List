@@ -48,7 +48,9 @@ function printList(list) {
 function loginUser() {
   let username=prompt("Enter your username: ");
   if(!userDB[username]){
-    userDB[username]={toDo:[], Done:[]};
+    //userDB[username]={toDo:[], Done:[]};
+    userDB[username]=[];
+    //{"user1":[{"task":"sleep","priority":"High","status":"todo"}]}
   }else{
     console.log("Welcome back ", username);
   }
@@ -68,16 +70,18 @@ function deleteTask(xyz){
 // Function to Set Prority
 function print_priority_of_Task(){
   let priority_bar={
-    1:"Very High",
-    2:"Moderate",
-    3:"Low"
+    1:"Critical",
+    2:"Very High",
+    3:"Medium",
+    4:"Low"
   }
   
   let value=Object.keys(priority_bar).length;
   for(let i=1;i<=value;i++){
     console.log(`priority Bar ${i} = ${priority_bar[i]}`);
   }
-  
+  // toDo1= {1:["eat"," High","todo"]}
+  // Object.key(toDo1).arr[1]
 }
 
 function set_priority_of_task(task_not_completed_array){

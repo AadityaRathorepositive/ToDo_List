@@ -75,13 +75,97 @@ function deleteSingleTask(userObj,task_name){
     let revome_iteam=null;
     for(let i=0;i< user_task.length;i++){
         if(user_task[i].title ===task_name){
-            revome_iteam=user_task.splice(i,1);
+            revome_item=user_task.splice(i,1);
             break;
         }
     }
-    return revome_iteam;
+    return revome_item;
     
 }
+
+//Find User Index
+function findUserIndex(userObj){
+    for(let i=0;i<DBUSER.length;i++){
+        
+        if(userObj.name===DBUSER[i].name){
+            return i;
+        }
+    }
+    return -1;
+}
+
+//Delete User
+function deleteUser(userObj){
+    let UserIndex=findUserIndex(userObj);
+    let deletedUser=DBUSER.splice(UserIndex,1);
+    return deletedUser;
+}
+
+//Add Add New Task
+function addNewTask(userObj){
+    let NameofNewTask=prompt("Task Name: ");
+    let priorityOfTask=prompt(`Task Priority: ${taskPriorityMenu}`);
+    let newTask={
+        title:NameofNewTask,
+        priority:priorityOfTask,
+        status:"to-d0"
+    };
+    userObj.task.push(newTask);
+    console.log("Task added successfully");
+}
+
+//View Task
+function viewTask(userObj){
+    console.log(JSON.stringify(userObj.task,null,2));
+}
+
+//Find task using User Name
+function findTaskUsingUserName(userObj,task_name){
+    for(let taskName of userObj.task){
+        if(taskName.title===task_name){
+            return taskName;
+        }
+    }
+    return null;
+}
+//Mark AS Done to the Task
+function markAsDone(userObj){
+    console.log(JSON.stringify(userObj.task,null,2));
+    let taskToMarkAsDone=prompt("Which task do you want to mark as complete: ");
+    let taskNameFound=findTaskUsingUserName(userObj,taskToMarkAsDone);
+    if(taskNameFound){
+        taskNameFound.status="Completed";
+        console.log(`Success "${taskNameFound}" is marked as Completed`);
+    }
+    else{
+        console.log("Task Not Found");
+    }
+}
+
+//Change Priority
+function changePriority(userObj){
+    console.log(JSON.stringify(userObj,null,2));
+    let taskNameToChangeThePriority=prompt("Enter the name of the task which you want to change the priority: ");
+    let taskNameFound=findTaskUsingUserName(userObj,taskNameToChangeThePriority);
+    if(taskNameFound){
+        let askForConformation=prompt(`DO you want to change the priority of this ${taskNameFound} task:, Yes or No`).toLowerCase();
+        if(askForConformation==="yes"){
+            let printTaskPriorityMenu=taskPriorityMenu
+                .map(shift=>`${shift[0]}:${shift[1]}`)
+                .join("\n");
+            let priorityValue=parseInt(prompt(`Enter the value of the priority: ${printTaskPriorityMenu}`));
+            taskNameFound.priority=priorityValue;
+            console.log(`${taskNameToChangeThePriority} priority has been changed`);
+        }
+        
+    }
+    else{
+        console.log("Task Not Found");
+    }
+}
+
+//Current User
+
 
 //Switch User (means user want to modify the task)
 let taskMenu=new Map();
@@ -89,15 +173,10 @@ taskMenu.set(1,"Add Task");
 taskMenu.set(2,"View Task");
 taskMenu.set(3,"Mark as Done");
 taskMenu.set(4,"Delete");
-taskMenu.set(5,"Set Priority");
+taskMenu.set(5,"Change Priority");
 taskMenu.set(6,"Switch User");
 
 let taskMenuArray=[...taskMenu];
-
-// Task of a user Function
-function taskOfSingleUser(){
-    
-}
 
 
 //Task Priority
@@ -154,13 +233,35 @@ function user(){
             console.log(JSON.stringify(listOfTasks,null,2));
         }
         else if(addUserOrNo===4){
+            let nameOfUser_Input=prompt("Please enter name of the User: ");
+            let doesUserExist=findThatUser(nameOfUser_Input);
+            let outputOfTaskMenu=taskMenuArray
+                        .map(pair=>`${pair[0]}=${pair[1]}`)
+                        .join("\n");
+            if(doesUserExist.length>0){
+                let inputFromOptions=prompt(`Which Operation you want to perform: ${outputOfTaskMenu}`);
+                while(inputFromOptions!=6){
+                    
+                    inputFromOptions=prompt(`Which Operation you want to perform: ${outputOfTaskMenu}`);
+                    if(inputFromOptions===1){
+                        addNewTask(nameOfUser_Input);
+                    }
+                    else if(inputFromOptions===2){
+                        
+                    }
+                }
+            }
+            else{
+                console.log("User Not Found.");
+            }
+            
             //Modify Task
-            let userInput=prompt("Please Enter the name of the user you want to modify: ");
-            let foundUser=findThatUser(userInput);
-            console.log(JSON.stringify(foundUser,null,2));
-            let taskInput=prompt("Please write which task you want to modify: ");
-            let modifiedTask=modifyTask(foundUser[0],taskInput);
-            console.log(JSON.stringify(modifiedTask,null,2));
+            // let userInput=prompt("Please Enter the name of the user you want to modify: ");
+            // let foundUser=findThatUser(userInput);
+            // console.log(JSON.stringify(foundUser,null,2));
+            // let taskInput=prompt("Please write which task you want to modify: ");
+            // let modifiedTask=modifyTask(foundUser[0],taskInput);
+            // console.log(JSON.stringify(modifiedTask,null,2));
         }
         else if(addUserOrNo===5){
             let options=parseInt(prompt("Do you want to search task from user name or from task name, Enter 1 for user name or 2 for task name: "));
@@ -189,17 +290,31 @@ function user(){
                 let deletedTask;
                 if(user_name==="all"){
                     for(let i=0;i<findWithTask.length;i++){
-                        deletedTask=deleteSingleTask(user_name[i],task_Input);
-            
+                        deletedTask=deleteSingleTask(findWithTask[i],task_Input);
+                        console.log(JSON.stringify(deletedTask,null,2));
                     }
+                    console.log(JSON.stringify(findWithTask,null,2));
+                }else{
+                    deletedTask=findWithTask.find(user=>user.name===user_name);
                     console.log(JSON.stringify(deletedTask,null,2));
                 }
-                else{
-                    deletedTask=deleteSingleTask(user_name,task_Input);
-                    console.log(JSON.stringify(deletedTask,null,2));  
-                }
+                
             }
             
+        }
+        else if(addUserOrNo===6){
+            let userInput=prompt("Please enter the name of the user: ");
+            let resultOfFindUser=findThatUser(userInput);
+            if(resultOfFindUser){
+                console.log(JSON.stringify(resultOfFindUser,null,2));
+                let inputForDeleteUser=prompt("Do you want to delete this User,Reply with yes or no:").toLowerCase();
+                
+                if(inputForDeleteUser==="yes"){
+                    console.log(JSON.stringify(deleteUser(resultOfFindUser[0])));
+                }
+            }else{
+                console.log(`${userInput} not Found`);
+            }
         }
         addUserOrNo=parseInt(prompt(`Please your Task\n ${startMenu}`));
 

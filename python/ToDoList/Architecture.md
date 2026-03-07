@@ -11,7 +11,7 @@ The application is organized into four main modules:
 ```
 ToDoList/
 ├── user.py      # User management and authentication
-├── item.py      # Task/item definitions and enums
+├── task.py      # Task definitions and enums
 ├── database.py  # Data storage and CRUD operations
 └── main.py      # CLI interface and orchestration
 ```
@@ -42,7 +42,7 @@ ToDoList/
 
 ---
 
-### 3.2 item.py - Task Management
+### 3.2 task.py - Task Management
 
 **Purpose**: Defines the Task entity and related enumerations.
 
@@ -52,9 +52,9 @@ ToDoList/
 |------------|------|----------------|
 | Priority | Enum | Defines task priority levels: LOW, MEDIUM, HIGH, CRITICAL |
 | Status | Enum | Defines task status: TODO, INPROGRESS, DONE, CANCELLED |
-| Item | Entity | Represents a task with all properties (name, description, priority, deadline, status) |
+| Task | Entity | Represents a task with all properties (name, description, priority, deadline, status) |
 
-**Item Properties**:
+**Task Properties**:
 - `name/summary` (string, required)
 - `description` (string, optional)
 - `priority` (Priority enum, default: LOW)
@@ -69,7 +69,7 @@ ToDoList/
 
 **Design Rationale**:
 - Enums are used instead of strings to provide type safety and IDE autocomplete support
-- Keeping Item as a simple data class with no business logic follows the Single Responsibility Principle
+- Keeping Task as a simple data class with no business logic follows the Single Responsibility Principle
 
 ---
 
@@ -83,8 +83,8 @@ ToDoList/
 |-------|------|----------------|
 | DBTable | Abstract Base Class | Defines database table interface |
 | UserTable | Concrete Implementation | Stores and manages User objects |
-| ItemTable | Concrete Implementation | Stores and manages Item objects |
-| UserItemsTable | Concrete Implementation | Manages relationship between users and their items |
+| TaskTable | Concrete Implementation | Stores and manages Task objects |
+| UserTasksTable | Concrete Implementation | Manages relationship between users and their tasks |
 
 **Data Storage**:
 - Uses Python's built-in `list` and `dict` data structures
@@ -98,7 +98,7 @@ ToDoList/
 
 **Design Rationale**:
 - Abstract base class (DBTable) follows the Template Method pattern, ensuring consistent behavior across all tables
-- Separate UserItemsTable allows for efficient querying of tasks per user
+- Separate UserTasksTable allows for efficient querying of tasks per user
 - The table classes act as repositories, providing a clean separation between data access and business logic
 
 ---
@@ -143,11 +143,11 @@ ToDoList/
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-│    user.py    │    │   item.py     │    │  database.py  │
+│    user.py    │    │   task.py     │    │  database.py  │
 │               │    │               │    │               │
 │ - User        │    │ - Priority    │    │ - UserTable   │
-│ - Auth        │    │ - Status      │    │ - ItemTable   │
-│ - SimpleAuth  │    │ - Item        │    │ - UserItems   │
+│ - Auth        │    │ - Status      │    │ - TaskTable   │
+│ - SimpleAuth  │    │ - Task        │    │ - UserTasks   │
 └───────────────┘    └───────────────┘    └───────────────┘
 ```
 
@@ -155,7 +155,7 @@ ToDoList/
 1. Application starts → main.py presents Login/Register options
 2. User registers/logs in → user.py handles authentication
 3. After login → main.py retrieves user's tasks from database
-4. Tasks displayed → item.py provides task structure, database.py retrieves data
+4. Tasks displayed → task.py provides task structure, database.py retrieves data
 5. User creates/updates/deletes → database.py performs CRUD operations
 6. Changes reflected → main.py refreshes the display
 
@@ -183,10 +183,10 @@ ToDoList/
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│                         item.py                                │
+│                         task.py                                │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌──────────┐  ┌──────────┐  ┌──────────────────────────────┐ │
-│  │ Priority  │  │  Status  │  │            Item              │ │
+│  │ Priority  │  │  Status  │  │            Task              │ │
 │  ├──────────┤  ├──────────┤  ├──────────────────────────────┤ │
 │  │ LOW       │  │ TODO     │  │ name: str                    │ │
 │  │ MEDIUM    │  │ INPROGRESS│ │ description: str (optional)  │ │
@@ -212,7 +212,7 @@ ToDoList/
 │     ┌─────┴─────┬─────────────┐                               │
 │     ▼           ▼             ▼                               │
 │ ┌─────────┐ ┌─────────┐ ┌─────────────┐                      │
-│ │UserTable│ │ItemTable│ │UserItemsTable│                     │
+│ │UserTable│ │TaskTable│ │UserTasksTable│                     │
 │ └─────────┘ └─────────┘ └─────────────┘                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -248,7 +248,7 @@ The architecture supports easy addition of:
 - Different authentication methods (OAuth, JWT) by implementing Auth abstract class
 - New database backends (file-based, SQL) by implementing DBTable abstract class
 - Additional CLI views or a future GUI by separating presentation from business logic
-- Task categories/tags by extending the Item class or adding new tables
+- Task categories/tags by extending the Task class or adding new tables
 
 </content>
 </invoke>

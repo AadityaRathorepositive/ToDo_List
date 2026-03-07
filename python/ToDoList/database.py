@@ -219,12 +219,12 @@ class UserTable(DBTable):
         return None
 
 
-class ItemTable(DBTable):
+class TaskTable(DBTable):
     """
-    Table for storing task/item records.
+    Table for storing task records.
     
     Manages task data including name, description, priority, deadline, and status.
-    Each item has a unique ID.
+    Each task has a unique ID.
     """
     
     def __init__(self):
@@ -232,15 +232,15 @@ class ItemTable(DBTable):
     
     def add(self, record: dict) -> dict:
         """
-        Add a new item to the table.
+        Add a new task to the table.
         
         Args:
-            record: Dictionary with item data
+            record: Dictionary with task data
             
         Returns:
-            The added item with generated ID
+            The added task with generated ID
         """
-        new_item = {
+        new_task = {
             'id': self._generate_id(),
             'name': record.get('name'),
             'description': record.get('description'),
@@ -248,19 +248,18 @@ class ItemTable(DBTable):
             'deadline': record.get('deadline'),
             'status': record.get('status', 'TODO')
         }
-        self._data.append(new_item)
-        return new_item
+        self._data.append(new_task)
+        return new_task
     
     def update(self, record_id: Any, data: dict) -> bool:
         """
-        Update an item.
+        Update a task.
         
         Args:
-            record_id: Item ID
+            record_id: Task ID
             data: Dictionary with fields to update
-            
-        Returns:
-            True if successful, False if item not found
+            Returns:
+            True if successful, False if task not found
         """
         index = self._find_index_by_id(record_id)
         if index == -1:
@@ -273,13 +272,13 @@ class ItemTable(DBTable):
     
     def delete(self, record_id: Any) -> bool:
         """
-        Delete an item by ID.
+        Delete a task by ID.
         
         Args:
-            record_id: Item ID
+            record_id: Task ID
             
         Returns:
-            True if successful, False if item not found
+            True if successful, False if task not found
         """
         index = self._find_index_by_id(record_id)
         if index == -1:
@@ -289,28 +288,28 @@ class ItemTable(DBTable):
     
     def find_by_id(self, record_id: Any) -> Optional[dict]:
         """
-        Find an item by ID.
+        Find a task by ID.
         
         Args:
-            record_id: Item ID
+            record_id: Task ID
             
         Returns:
-            Item record or None
+            Task record or None
         """
         index = self._find_index_by_id(record_id)
         return self._data[index] if index != -1 else None
     
     def find_all(self) -> list[dict]:
-        """Get all items."""
+        """Get all tasks."""
         return self._data.copy()
 
 
-class UserItemsTable(DBTable):
+class UserTasksTable(DBTable):
     """
-    Table for managing the relationship between users and their items.
+    Table for managing the relationship between users and their tasks.
     
     Acts as a join table to associate users with their tasks.
-    Each record links a user_id to an item_id.
+    Each record links a user_id to a task_id.
     """
     
     def __init__(self):
@@ -318,10 +317,10 @@ class UserItemsTable(DBTable):
     
     def add(self, record: dict) -> dict:
         """
-        Create a user-item association.
+        Create a user-task association.
         
         Args:
-            record: Dictionary with 'user_id' and 'item_id'
+            record: Dictionary with 'user_id' and 'task_id'
             
         Returns:
             The created association record
@@ -329,7 +328,7 @@ class UserItemsTable(DBTable):
         new_association = {
             'id': self._generate_id(),
             'user_id': record.get('user_id'),
-            'item_id': record.get('item_id')
+            'task_id': record.get('task_id')
         }
         self._data.append(new_association)
         return new_association
@@ -389,7 +388,7 @@ class UserItemsTable(DBTable):
     
     def find_by_user_id(self, user_id: Any) -> list[dict]:
         """
-        Find all item IDs associated with a user.
+        Find all task IDs associated with a user.
         
         Args:
             user_id: User ID
@@ -399,17 +398,17 @@ class UserItemsTable(DBTable):
         """
         return [assoc for assoc in self._data if assoc.get('user_id') == user_id]
     
-    def find_by_item_id(self, item_id: Any) -> list[dict]:
+    def find_by_task_id(self, task_id: Any) -> list[dict]:
         """
-        Find all user IDs associated with an item.
+        Find all user IDs associated with a task.
         
         Args:
-            item_id: Item ID
+            task_id: Task ID
             
         Returns:
-            List of association records for the item
+            List of association records for the task
         """
-        return [assoc for assoc in self._data if assoc.get('item_id') == item_id]
+        return [assoc for assoc in self._data if assoc.get('task_id') == task_id]
     
     def delete_by_user_id(self, user_id: Any) -> int:
         """
@@ -425,17 +424,17 @@ class UserItemsTable(DBTable):
         self._data = [assoc for assoc in self._data if assoc.get('user_id') != user_id]
         return original_count - len(self._data)
     
-    def delete_by_item_id(self, item_id: Any) -> int:
+    def delete_by_task_id(self, task_id: Any) -> int:
         """
-        Delete all associations for an item.
+        Delete all associations for a task.
         
         Args:
-            item_id: Item ID
+            task_id: Task ID
             
         Returns:
             Number of associations deleted
         """
         original_count = len(self._data)
-        self._data = [assoc for assoc in self._data if assoc.get('item_id') != item_id]
+        self._data = [assoc for assoc in self._data if assoc.get('task_id') != task_id]
         return original_count - len(self._data)
 

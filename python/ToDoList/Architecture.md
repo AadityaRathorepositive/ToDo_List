@@ -29,22 +29,34 @@ ToDoList/
 | User | Entity | Represents a user with username and password hash |
 | Auth | Abstract Base Class | Defines authentication interface |
 | SimpleAuth | Concrete Implementation | Implements custom simple hash for password storage |
+| UserManager | Manager/Service | Coordinates user operations, registration, login, and session management |
+
+**UserManager Methods**:
+- `register(username, password)` - Register a new user
+- `login(username, password)` - Authenticate a user
+- `logout()` - Log out current user
+- `get_current_user()` - Get the currently logged in user
+- `is_logged_in()` - Check if user is logged in
+- `delete_user(user_id)` - Delete a user account
+- `get_all_users()` - Get all registered users
 
 **Benefits**:
 - **Encapsulation**: All user-related logic is self-contained
 - **Abstraction**: Auth abstract class allows future authentication methods to be added easily
 - **Security**: Passwords are never stored in plain text; custom hashing protects user credentials
 - **Extensibility**: New authentication strategies can be added by implementing the Auth interface
+- **Separation of Concerns**: UserManager separates business logic from data access
 
 **Design Rationale**:
 - Using an abstract base class for Auth follows the Strategy pattern, making the system flexible for future authentication methods (e.g., if later adding OAuth or JWT)
 - SimpleAuth provides a lightweight, dependency-free password hashing solution suitable for an in-memory application
+- UserManager acts as a facade, coordinating between User entity, authentication, and database layers
 
 ---
 
 ### 3.2 task.py - Task Management
 
-**Purpose**: Defines the Task entity and related enumerations.
+**Purpose**: Defines the Task entity, enumerations, and task management operations.
 
 **Classes/Enums**:
 
@@ -53,6 +65,7 @@ ToDoList/
 | Priority | Enum | Defines task priority levels: LOW, MEDIUM, HIGH, CRITICAL |
 | Status | Enum | Defines task status: TODO, INPROGRESS, DONE, CANCELLED |
 | Task | Entity | Represents a task with all properties (name, description, priority, deadline, status) |
+| TaskManager | Manager/Service | Coordinates task CRUD operations, queries, and user-task associations |
 
 **Task Properties**:
 - `name/summary` (string, required)
@@ -61,15 +74,32 @@ ToDoList/
 - `deadline` (date, optional)
 - `status` (Status enum, default: TODO)
 
+**TaskManager Methods**:
+- `create_task(user_id, name, description, priority, deadline, status)` - Create a new task
+- `get_tasks_by_user(user_id)` - Get all tasks for a user
+- `get_task_by_id(task_id)` - Get a task by ID
+- `update_task(task_id, name, description, priority, deadline, status)` - Update a task
+- `delete_task(task_id)` - Delete a task
+- `get_tasks_by_status(user_id, status)` - Get tasks filtered by status
+- `get_tasks_by_priority(user_id, priority)` - Get tasks filtered by priority
+- `get_overdue_tasks(user_id)` - Get overdue tasks (deadline passed, not done/cancelled)
+- `mark_as_done(task_id)` - Mark task as DONE
+- `mark_as_inprogress(task_id)` - Mark task as INPROGRESS
+- `mark_as_cancelled(task_id)` - Mark task as CANCELLED
+- `get_all_tasks()` - Get all tasks in system
+- `delete_user_tasks(user_id)` - Delete all tasks for a user
+
 **Benefits**:
 - **Type Safety**: Enums prevent invalid priority or status values
 - **Clarity**: Using enums makes code self-documenting
 - **Validation**: Enum constraints are enforced at the type level
 - **Maintainability**: Changing priority/status values only requires updating the enum definition
+- **Separation of Concerns**: TaskManager handles business logic, while Task is a simple data entity
 
 **Design Rationale**:
 - Enums are used instead of strings to provide type safety and IDE autocomplete support
 - Keeping Task as a simple data class with no business logic follows the Single Responsibility Principle
+- TaskManager acts as a facade, coordinating between Task entity, database tables, and user-task associations
 
 ---
 
@@ -86,6 +116,16 @@ ToDoList/
 | TaskTable | Concrete Implementation | Stores and manages Task objects |
 | UserTasksTable | Concrete Implementation | Manages relationship between users and their tasks |
 
+**Additional Query Methods**:
+
+| Class | Method | Description |
+|-------|--------|-------------|
+| UserTable | `find_by_username(username)` | Find a user by username |
+| UserTasksTable | `find_by_user_id(user_id)` | Find all task associations for a user |
+| UserTasksTable | `find_by_task_id(task_id)` | Find all user associations for a task |
+| UserTasksTable | `delete_by_user_id(user_id)` | Delete all associations for a user |
+| UserTasksTable | `delete_by_task_id(task_id)` | Delete all associations for a task |
+
 **Data Storage**:
 - Uses Python's built-in `list` and `dict` data structures
 - No external database or persistence layer
@@ -95,6 +135,7 @@ ToDoList/
 - **Consistency**: Common operations (add, update, delete, find) are defined in the base class
 - **Simplicity**: Using built-in datatypes eliminates external dependencies
 - **Testability**: In-memory storage makes unit testing straightforward
+- **Query Flexibility**: Additional finder methods enable efficient data retrieval by different keys
 
 **Design Rationale**:
 - Abstract base class (DBTable) follows the Template Method pattern, ensuring consistent behavior across all tables
@@ -148,15 +189,16 @@ ToDoList/
 │ - User        │    │ - Priority    │    │ - UserTable   │
 │ - Auth        │    │ - Status      │    │ - TaskTable   │
 │ - SimpleAuth  │    │ - Task        │    │ - UserTasks   │
+│ - UserManager │    │ - TaskManager │    │               │
 └───────────────┘    └───────────────┘    └───────────────┘
 ```
 
 **Flow**:
 1. Application starts → main.py presents Login/Register options
-2. User registers/logs in → user.py handles authentication
-3. After login → main.py retrieves user's tasks from database
-4. Tasks displayed → task.py provides task structure, database.py retrieves data
-5. User creates/updates/deletes → database.py performs CRUD operations
+2. User registers/logs in → UserManager handles authentication via SimpleAuth
+3. After login → TaskManager retrieves user's tasks from database
+4. Tasks displayed → Task provides task structure, database tables retrieve data
+5. User creates/updates/deletes → TaskManager coordinates CRUD via TaskTable and UserTasksTable
 6. Changes reflected → main.py refreshes the display
 
 ---
@@ -170,9 +212,10 @@ ToDoList/
 │  ┌──────────┐        ┌─────────────────┐                      │
 │  │   User   │        │ Auth (ABC)      │                      │
 │  ├──────────┤        ├─────────────────┤                      │
-│  │ username │        │ + hash()        │                      │
-│  │ password │        │ + verify()      │                      │
-│  └──────────┘        └────────┬────────┘                      │
+│  │ id       │        │ + hash()        │                      │
+│  │ username │        │ + verify()      │                      │
+│  │ password │        └────────┬────────┘                      │
+│  └──────────┘                 │                                │
 │                               │                                │
 │                    ┌──────────┴──────────┐                    │
 │                    │    SimpleAuth        │                    │
@@ -180,6 +223,18 @@ ToDoList/
 │                    │ + hash(password)     │                    │
 │                    │ + verify(password)   │                    │
 │                    └──────────────────────┘                    │
+│                                                                 │
+│  ┌──────────────────────────────────────────┐                 │
+│  │           UserManager                     │                 │
+│  ├──────────────────────────────────────────┤                 │
+│  │ + register(username, password)           │                 │
+│  │ + login(username, password)               │                 │
+│  │ + logout()                                │                 │
+│  │ + get_current_user()                     │                 │
+│  │ + is_logged_in()                         │                 │
+│  │ + delete_user(user_id)                   │                 │
+│  │ + get_all_users()                        │                 │
+│  └──────────────────────────────────────────┘                 │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -188,12 +243,31 @@ ToDoList/
 │  ┌──────────┐  ┌──────────┐  ┌──────────────────────────────┐ │
 │  │ Priority  │  │  Status  │  │            Task              │ │
 │  ├──────────┤  ├──────────┤  ├──────────────────────────────┤ │
-│  │ LOW       │  │ TODO     │  │ name: str                    │ │
-│  │ MEDIUM    │  │ INPROGRESS│ │ description: str (optional)  │ │
-│  │ HIGH      │  │ DONE      │ │ priority: Priority           │ │
-│  │ CRITICAL  │  │ CANCELLED │ │ deadline: date (optional)   │ │
-│  └──────────┘  └──────────┘  │ status: Status               │ │
+│  │ LOW       │  │ TODO     │  │ id: int                      │ │
+│  │ MEDIUM    │  │ INPROGRESS│ │ name: str                    │ │
+│  │ HIGH      │  │ DONE      │ │ description: str (optional)  │ │
+│  │ CRITICAL  │  │ CANCELLED │ │ priority: Priority           │ │
+│  └──────────┘  └──────────┘  │ deadline: date (optional)   │ │
+│                              │ status: Status               │ │
 │                              └──────────────────────────────┘ │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │                    TaskManager                             │ │
+│  ├──────────────────────────────────────────────────────────┤ │
+│  │ + create_task(user_id, name, ...)                         │ │
+│  │ + get_tasks_by_user(user_id)                             │ │
+│  │ + get_task_by_id(task_id)                                │ │
+│  │ + update_task(task_id, ...)                              │ │
+│  │ + delete_task(task_id)                                   │ │
+│  │ + get_tasks_by_status(user_id, status)                   │ │
+│  │ + get_tasks_by_priority(user_id, priority)               │ │
+│  │ + get_overdue_tasks(user_id)                             │ │
+│  │ + mark_as_done(task_id)                                  │ │
+│  │ + mark_as_inprogress(task_id)                            │ │
+│  │ + mark_as_cancelled(task_id)                            │ │
+│  │ + get_all_tasks()                                        │ │
+│  │ + delete_user_tasks(user_id)                             │ │
+│  └──────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -213,7 +287,16 @@ ToDoList/
 │     ▼           ▼             ▼                               │
 │ ┌─────────┐ ┌─────────┐ ┌─────────────┐                      │
 │ │UserTable│ │TaskTable│ │UserTasksTable│                     │
-│ └─────────┘ └─────────┘ └─────────────┘                      │
+│ │         │ │         │ │             │                      │
+│ │+find_by_│ │         │ │+find_by_    │                      │
+│ │ username│ │         │ │ user_id     │                      │
+│ └─────────┘ └─────────┘ │+find_by_    │                      │
+│                         │ task_id     │                      │
+│                         │+delete_by_  │                      │
+│                         │ user_id     │                      │
+│                         │+delete_by_  │                      │
+│                         │ task_id     │                      │
+│                         └─────────────┘                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

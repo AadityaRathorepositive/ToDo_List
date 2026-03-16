@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 const prompt= require("prompt-sync")();
 
 //User DataBase
@@ -343,7 +343,7 @@ function main(){
     console.log(JSON.stringify(DBUSER,null,2));
     user();
 }
-=======
+
 const prompt= require("prompt-sync")();
 
 //User DataBase
@@ -573,5 +573,5 @@ function main(){
     console.log(JSON.stringify(DBUSER,null,2));
     user();
 }
->>>>>>> 41e2dcee2a2681c832f455ab410fcec7f7f62de8
+
 main();

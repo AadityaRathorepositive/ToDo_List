@@ -10,10 +10,10 @@ menu = [
     'quit' #5
 ]
 
-# added in memory db
-db = {}
+# added in memory DB
+DB = {}
 
-'''db = {'user1': {
+'''DB = {'user1': {
             'todo': [], 
             'done': []
             }, 
@@ -32,14 +32,14 @@ def get_user():
 
 # function to fetch todo_list and done_list for user
 def get_todo_list_for_user(user):
-    todo_list = db[user]['todo']
-    done_list = db[user]['done']
+    todo_list = DB[user]['todo']
+    done_list = DB[user]['done']
     return todo_list, done_list
 
 # add user and intialize todo, done list 
 def add_user(user):
-    if not user in db.keys():
-        db[user]= {
+    if not user in DB.keys():
+        DB[user]= {
             'todo': [],
             'done': []
         }
@@ -117,7 +117,7 @@ def main():
         # fetch user
         user1 = get_user()
         # check if user exists
-        if not user1 in db.keys():
+        if not user1 in DB.keys():
             add_new_user = input("User not found. Add this user? y/n: ")
             if not add_new_user.lower().strip()=='y':
                 break

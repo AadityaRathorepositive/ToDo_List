@@ -447,7 +447,7 @@ function taskOfSingleUser(){
 
 
 //Task Priority
-let taskPriority=new Map();
+let taskPriority = new Map();
 taskPriority.set(1,"Critical");
 taskPriority.set(2,"Very High");
 taskPriority.set(3,"Medium");
